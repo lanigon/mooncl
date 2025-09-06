@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Monncl",
+  title: "Mooncl",
   description: "Mooncl is a platform for creating and sharing your own AI agents.",
 };
 

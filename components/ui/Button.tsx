@@ -1,55 +1,99 @@
-import React from 'react';
+'use client';
+
+import * as React from 'react';
 import { cn } from '@/lib/utils';
 
-interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'wallet' | 'google';
-  size?: 'sm' | 'md' | 'lg';
+type Appearance = 'brand' | 'glass' | 'ghost' | 'outline';
+type Size = 'sm' | 'md' | 'lg';
+
+/** 兼容旧 API：variant 优先映射到 appearance */
+type LegacyVariant = 'primary' | 'secondary' | 'wallet' | 'google';
+
+export interface ButtonProps
+  extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  /** 新 API（推荐） */
+  appearance?: Appearance;
+  /** 旧 API（兼容）：primary/google=brand，wallet=glass，secondary=outline */
+  variant?: LegacyVariant;
+  size?: Size;
   isLoading?: boolean;
-  children: React.ReactNode;
+  iconLeft?: React.ReactNode;
+  iconRight?: React.ReactNode;
 }
 
-const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant = 'primary', size = 'md', isLoading = false, children, ...props }, ref) => {
-    const baseStyles = "inline-flex items-center justify-center rounded-full font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-offset-2";
+const sizeClass: Record<Size, string> = {
+  sm: 'h-9 px-3 text-sm rounded-2xl',
+  md: 'h-11 px-5 text-base rounded-2xl',
+  lg: 'h-14 px-8 text-lg rounded-2xl',
+};
 
-    const variants = {
-      primary: "bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white focus:ring-purple-500",
-      secondary: "bg-gray-700 hover:bg-gray-600 text-white focus:ring-gray-500",
-      wallet: "bg-gray-800 hover:bg-gray-700 text-white border border-gray-600 focus:ring-gray-500",
-      google: "bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white focus:ring-pink-500"
-    };
+function mapVariantToAppearance(v?: LegacyVariant): Appearance | undefined {
+  if (!v) return undefined;
+  if (v === 'primary' || v === 'google') return 'brand';
+  if (v === 'wallet') return 'glass';
+  if (v === 'secondary') return 'outline';
+  return undefined;
+}
 
-    const sizes = {
-      sm: "h-8 px-3 text-sm",
-      md: "h-10 px-4 text-sm",
-      lg: "h-12 px-6 text-base"
-    };
+export default function Button({
+  className,
+  appearance,
+  variant,           // 旧字段
+  size = 'md',
+  isLoading = false,
+  iconLeft,
+  iconRight,
+  disabled,
+  children,
+  ...props
+}: ButtonProps) {
+  // 解析最终外观：appearance 优先，其次兼容 variant
+  const resolved: Appearance = appearance ?? mapVariantToAppearance(variant) ?? 'brand';
+  const isDisabled = disabled || isLoading;
 
-    return (
-      <button
-        className={cn(
-          baseStyles,
-          variants[variant],
-          sizes[size],
-          className
-        )}
-        ref={ref}
-        disabled={isLoading}
-        {...props}
-      >
-        {isLoading ? (
-          <div className="flex items-center">
-            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-            连接中...
-          </div>
-        ) : (
-          children
-        )}
-      </button>
-    );
+  const base =
+    'inline-flex items-center justify-center gap-2 font-semibold tracking-wide transition-all ' +
+    'focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ' +
+    'focus-visible:ring-[color:var(--brand-2,#93c5fd)] disabled:opacity-60 disabled:cursor-not-allowed';
+
+  const styles: React.CSSProperties = {};
+  let look = '';
+
+  if (resolved === 'brand') {
+    look = 'text-white shadow-sm hover:translate-y-[-1px] active:translate-y-0';
+    styles.background =
+      'var(--gradient-brand, linear-gradient(90deg,#ff4dd2,#7b5cff,#29d3ff))';
+    styles.boxShadow = 'var(--elev-1,0 4px 12px rgba(0,0,0,.25))';
+  } else if (resolved === 'glass') {
+    look = 'text-white border hover:translate-y-[-1px] active:translate-y-0';
+    // 几乎透明 + 清晰描边 = 贴合 Wallet 样式
+    styles.background = 'var(--glass-bg, rgba(255,255,255,.03))';
+    styles.borderColor = 'var(--glass-border, rgba(255,255,255,.28))';
+    (styles as any).backdropFilter = 'blur(var(--blur-md,12px))';
+    styles.boxShadow = 'var(--elev-1,0 4px 12px rgba(0,0,0,.25))';
+  } else if (resolved === 'outline') {
+    look = 'text-white border hover:bg-white/10';
+  } else {
+    look = 'text-white hover:bg-white/10';
   }
-);
 
-Button.displayName = "Button";
-
-export default Button;
+  return (
+    <button
+      type="button"
+      className={cn(base, sizeClass[size], look, className)}
+      style={styles}
+      disabled={isDisabled}
+      {...props}
+    >
+      {isLoading && (
+        <span
+          className="mr-2 inline-block h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"
+          aria-hidden
+        />
+      )}
+      {!isLoading && iconLeft}
+      <span className="whitespace-nowrap">{children}</span>
+      {!isLoading && iconRight}
+    </button>
+  );
+}

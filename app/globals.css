@@ -1,8 +1,10 @@
 @import "tailwindcss";
+@import "../styles/tokens.css";
 
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  color-scheme: dark;
 }
 
 @theme inline {
@@ -23,4 +25,65 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+
+html, body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--fg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+* { box-sizing: border-box; }
+img, svg, video, canvas {
+  max-width: 100%;
+  height: auto;
+}
+
+/* 选中高亮 */
+::selection {
+  background: color-mix(in oklab, var(--brand-2) 35%, transparent);
+  color: #fff;
+}
+
+/* ===== Utilities（仅保留少量全局工具类）===== */
+
+/* 渐变文字：用于标题里 “Mooncl” */
+.text-brand-gradient {
+  background: var(--gradient-brand);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* 玻璃表面：用于非按钮容器（面板/卡片），按钮请用组件的 glass 变体 */
+.glass-surface {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--elev-1);
+  backdrop-filter: blur(var(--blur-md));
+  -webkit-backdrop-filter: blur(var(--blur-md));
+  border-radius: var(--radius-md);
+}
+
+/* 阴影层级（可选） */
+.elevation-1 { box-shadow: var(--elev-1); }
+.elevation-2 { box-shadow: var(--elev-2); }
+
+/* 禁止拖拽/选择（像素背景用得到） */
+.no-drag {
+  -webkit-user-drag: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
+}
+
+.text-brand-gradient{
+  background: var(--gradient-brand);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  display:inline-block;
 }
